@@ -1,0 +1,15 @@
+{
+  "name": "raghulverse",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node tests/run.mjs",
+    "test:e2e": "python3 tests/e2e.py"
+  },
+  "description": "RAGHULVERSE - interactive SRM KTR campus portfolio game (dependency-free static site)",
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en" data-reduce="0">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>RAGHULVERSE - Explore My World</title>
+  <meta name="description" content="RAGHULVERSE: an interactive campus portfolio game by Raghul S. Explore a stylized SRM KTR campus, or open the Quick Portfolio." />
+  <meta name="theme-color" content="#071a33" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23071a33'/%3E%3Cpath d='M8 23V9h8a5 5 0 0 1 0 10h-8m8 0 6 4' fill='none' stroke='%2338e1ff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-view="game">
+  <a class="skip" href="#quick" id="skip-quick">Skip the game: open Quick Portfolio</a>
+  <div id="live" class="sr" role="status" aria-live="polite"></div>
+
+  <div id="app">
+    <canvas id="game" tabindex="0" role="application" aria-label="RAGHULVERSE campus. Use WASD or arrow keys to walk, E to enter buildings. A text alternative is available in the campus directory and the Quick Portfolio."></canvas>
+
+    <!-- ===================== intro / start screen ===================== -->
+    <section id="intro" aria-label="Welcome">
+      <div class="intro-top">
+        <span class="brand">RAGHULVERSE</span>
+        <button class="btn sm ghost" id="btn-quick2">Quick Portfolio</button>
+      </div>
+      <div id="intro-title-box" class="intro-title">
+        <p class="eyebrow">Explore My World</p>
+        <h1>WELCOME TO RAGHULVERSE</h1>
+        <p class="sub">Your next adventure starts at SRM KTR.</p>
+        <p class="tag">One Campus. One Journey. A Thousand Possibilities.</p>
+        <button class="btn sm ghost" id="btn-skipintro">Skip intro</button>
+      </div>
+      <div id="intro-caption-box" class="intro-caption" hidden>
+        <p class="who">Raghul (synthetic narrator voice, not a recording of Raghul)</p>
+        <p id="intro-captions" class="caps" aria-live="off">Press “Hear introduction” for voice and captions.</p>
+        <button class="btn sm" id="btn-hear">🔊 Hear introduction</button>
+      </div>
+      <nav id="intro-menu" class="intro-menu" aria-label="Start menu" hidden>
+        <button class="btn primary lg" id="btn-start">Start Exploring</button>
+        <button class="btn" id="btn-quick">Quick Portfolio</button>
+        <span id="link-resume-wrap"><button class="btn" disabled aria-disabled="true">View Resume</button></span>
+        <button class="btn" id="btn-how">How to Play</button>
+        <button class="btn" id="btn-sound">Sound Settings</button>
+      </nav>
+    </section>
+
+    <!-- ===================== HUD ===================== -->
+    <header id="hud" hidden>
+      <div class="hud-left">
+        <div class="avatar" aria-hidden="true">R</div>
+        <div class="hud-id"><strong id="hud-name">Raghul S</strong><span id="hud-objective">Explore freely</span></div>
+      </div>
+      <div class="hud-mid" role="group" aria-label="Progress">
+        <div class="pbar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-label="Mission progress"><i id="hud-progress-bar"></i></div>
+        <span id="hud-progress-text">0/10 missions</span>
+        <span class="coins" title="Technology tokens">🪙 <b id="hud-tokens">0/22</b></span>
+      </div>
+      <div class="hud-right">
+        <span id="hud-resume"></span>
+        <button class="hud-btn" id="btn-map" aria-pressed="true" aria-label="Toggle minimap"><span aria-hidden="true">🗺</span><span class="lbl">&nbsp;Map</span></button>
+        <button class="hud-btn" id="btn-journal" aria-label="Mission journal"><span aria-hidden="true">📖</span><span class="lbl">&nbsp;Journal</span></button>
+        <button class="hud-btn" id="btn-dir" aria-label="Campus directory"><span aria-hidden="true">📍</span><span class="lbl">&nbsp;Directory</span></button>
+        <button class="hud-btn" id="btn-sound-toggle" aria-pressed="true" aria-label="Mute all sound">🔊</button>
+        <button class="hud-btn" id="btn-settings" aria-label="Settings">⚙</button>
+        <button class="hud-btn" id="btn-help" aria-label="Help and controls">?</button>
+        <button class="hud-btn" id="btn-pause" aria-label="Pause menu">❚❚</button>
+      </div>
+    </header>
+
+    <div id="minimap-wrap" hidden>
+      <canvas id="minimap" width="192" height="132" role="img" aria-label="Campus minimap. Click a marker to set guidance."></canvas>
+      <div class="legend"><i class="d red"></i>You <i class="d cy"></i>New <i class="d go"></i>Done <i class="d gr"></i>Locked</div>
+    </div>
+
+    <button id="prompt" class="prompt" hidden></button>
+
+    <div id="touch" hidden>
+      <div id="joy" aria-label="Movement joystick"><div id="joy-knob"></div></div>
+      <div class="touch-right">
+        <button class="tbtn" id="btn-run" aria-pressed="false">Run</button>
+        <button class="tbtn big" id="btn-interact" aria-label="Interact">Enter</button>
+      </div>
+    </div>
+
+    <div id="toasts" aria-hidden="true"></div>
+    <div id="confetti" aria-hidden="true"></div>
+
+    <!-- ===================== mission panel ===================== -->
+    <dialog id="panel" aria-labelledby="panel-title">
+      <div class="panel-head">
+        <div><p class="eyebrow" id="panel-eyebrow"></p><h2 id="panel-title"></h2><p id="panel-summary" class="muted"></p></div>
+        <button class="btn" id="panel-close">← Return to campus</button>
+      </div>
+      <div class="panel-body">
+        <aside class="stage">
+          <canvas id="holo" aria-hidden="true"></canvas>
+          <p class="stage-note">Synthetic narrator voice. Not a recording of Raghul.</p>
+        </aside>
+        <div id="panel-content" class="panel-content"></div>
+      </div>
+      <div class="panel-foot">
+        <div class="cap-box"><p id="caption" class="caption" aria-live="off"></p><span id="caption-count" class="muted"></span></div>
+        <div class="controls" role="group" aria-label="Narration controls">
+          <button class="ctl" id="nav-prev" aria-label="Previous line">⏮</button>
+          <button class="ctl main" id="nav-play" aria-label="Play narration">▶</button>
+          <button class="ctl" id="nav-next" aria-label="Next line">⏭</button>
+          <button class="ctl" id="nav-replay" aria-label="Replay narration">↻</button>
+          <button class="ctl" id="nav-skip" aria-label="Skip narration">Skip</button>
+          <button class="ctl" id="nav-mute" aria-pressed="false" aria-label="Mute narration">🔊</button>
+          <button class="ctl" id="nav-text" aria-pressed="false" aria-label="Text-only mode">Aa</button>
+          <label class="sel"><span class="sr">Voice</span><select id="nav-voice"></select></label>
+          <label class="sel"><span class="sr">Speech speed</span><select id="nav-speed"><option value="0.8">0.8×</option><option value="1" selected>1×</option><option value="1.2">1.2×</option><option value="1.5">1.5×</option></select></label>
+          <button class="btn primary" id="btn-claim">Claim badge</button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- ===================== dialogs ===================== -->
+    <dialog id="journal" aria-labelledby="journal-t"><div class="dlg-head"><h2 id="journal-t">Mission journal</h2><button class="btn sm" id="journal-close">Close</button></div><div id="journal-body"></div><div class="dlg-foot"><button class="btn sm danger" id="j-reset">Reset progress</button></div></dialog>
+    <dialog id="directory" aria-labelledby="dir-t"><div class="dlg-head"><h2 id="dir-t">Campus directory</h2><button class="btn sm" id="dir-close">Close</button></div><div id="dir-body"></div><div class="dlg-foot"><button class="btn sm" id="dir-clear">Clear guidance</button></div></dialog>
+    <dialog id="help" aria-labelledby="help-t"><div class="dlg-head"><h2 id="help-t">How to play</h2><button class="btn sm" id="help-close">Close</button></div><div id="help-body"></div></dialog>
+    <dialog id="pause" aria-labelledby="pause-t"><div class="dlg-head"><h2 id="pause-t">Paused</h2></div>
+      <div class="stackbtn"><button class="btn primary" id="pause-resume">Resume</button><button class="btn" id="pause-journal">Mission journal</button><button class="btn" id="pause-settings">Settings</button><button class="btn" id="pause-help">How to play</button><button class="btn" id="pause-quick">Quick Portfolio</button><button class="btn" id="pause-restart">Replay intro</button></div></dialog>
+    <dialog id="complete" aria-labelledby="complete-t"><div class="dlg-head"><h2 id="complete-t">Tour complete 🎉</h2><button class="btn sm" id="complete-close">Keep exploring</button></div><div id="complete-body"></div></dialog>
+    <dialog id="settings" aria-labelledby="set-t"><div class="dlg-head"><h2 id="set-t">Settings</h2><button class="btn sm" id="settings-close">Close</button></div>
+      <div class="form">
+        <label class="chk"><input type="checkbox" id="set-mute" /> Mute all sound and narration</label>
+        <label class="chk"><input type="checkbox" id="set-music" /> Ambient music</label>
+        <label class="chk"><input type="checkbox" id="set-sfx" /> Sound effects</label>
+        <label class="chk"><input type="checkbox" id="set-captions" /> Show captions</label>
+        <label class="chk"><input type="checkbox" id="set-text" /> Text-only mode (no voice, captions shown)</label>
+        <label>Narrator voice <select id="set-voice"></select></label>
+        <label>Speech speed <select id="set-rate"><option value="0.8">0.8×</option><option value="1">1×</option><option value="1.2">1.2×</option><option value="1.5">1.5×</option></select></label>
+        <label>Time of day <select id="set-time"><option value="day">Day</option><option value="sunset">Sunset</option><option value="evening">Evening</option></select></label>
+        <label>Reduced motion <select id="set-motion"><option value="auto">Follow system</option><option value="on">On</option><option value="off">Off</option></select></label>
+        <label>Graphics quality <select id="set-quality"><option value="auto">Auto</option><option value="high">High</option><option value="low">Low (faster)</option></select></label>
+        <p class="note">Only settings and progress are saved, in this browser. No account, no tracking.</p>
+        <button class="btn danger" id="set-reset">Reset progress</button>
+      </div></dialog>
+  </div>
+
+  <main id="quick" hidden aria-label="Quick Portfolio"></main>
+
+  <noscript><div class="noscript"><h1>Raghul S</h1><p>Data Science and Business Systems student · Integrated M.Tech in Computer Science Engineering (Data Science), SRM Institute of Science and Technology, Kattankulathur · CGPA 8.85</p>
+    <p>Email: <a href="mailto:sraghul240@gmail.com">sraghul240@gmail.com</a> · <a href="https://github.com/raghul2007">GitHub</a> · <a href="https://www.linkedin.com/in/raghul-s-82bb3a324">LinkedIn</a></p>
+    <p>The interactive campus game and full Quick Portfolio need JavaScript.</p></div></noscript>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
